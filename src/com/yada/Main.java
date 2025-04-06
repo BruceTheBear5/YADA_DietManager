@@ -4,8 +4,11 @@ import com.yada.models.*;
 import com.yada.services.*;
 import com.yada.utils.InputHelper;
 
-import java.net.SocketOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 
 public class Main {
     private static FoodDatabase foodDatabase = new FoodDatabase();
@@ -14,6 +17,7 @@ public class Main {
     private static UserProfile userProfile;
     // Default to Method One. User can switch later.
     private static DietGoalCalculator dietGoalCalculator = new MethodOneCalculator();
+    private static String currentDate = LocalDate.now().toString();
 
     public static void main(String[] args) {
         // Load foods and logs from files
@@ -53,24 +57,45 @@ public class Main {
                     setUserProfile();
                     break;
                 case "9":
-                    computeDietGoals();
+                    updateUserProfile();
                     break;
                 case "10":
-                    undoManager.undo();
+                    computeDietGoals();
                     break;
                 case "11":
-                    foodDatabase.saveFoods();
-                    System.out.println("Food data Saved.");
+                    undoManager.undo();
                     break;
                 case "12":
-                    logManager.saveLogs();
-                    System.out.println("Log data Saved.");
+                    changeDay();
                     break;
                 case "13":
-                    foodDatabase.saveFoods();
-                    logManager.saveLogs();
-                    System.out.println("Data saved. Exiting application.");
-                    running = false;
+                    System.out.println("\nSave Menu:");
+                    System.out.println("1. Save Food Data");
+                    System.out.println("2. Save Log Data");
+                    System.out.println("3. Save and Exit");
+                    System.out.println("Anything else: Return");
+                    String saveChoice = InputHelper.readLine("Enter choice: ");
+                    switch (saveChoice) {
+                        case "1":
+                            foodDatabase.saveFoods();
+                            System.out.println("Food data Saved.");
+                            break;
+                        case "2":
+                            logManager.saveLogs();
+                            System.out.println("Log data Saved.");
+                            break;
+                        case "3":
+                            foodDatabase.saveFoods();
+                            logManager.saveLogs();
+                            System.out.println("Data saved. Exiting application.");
+                            running = false;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case "14":
+                    loadFoodFromExternalSource();
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -87,22 +112,22 @@ public class Main {
         System.out.println("5. Add Log Entry");
         System.out.println("6. Delete Log Entry");
         System.out.println("7. View Daily Log");
-        System.out.println("8. Set/Update User Profile");
-        System.out.println("9. Compute Diet Goals");
-        System.out.println("10. Undo Last Action");
-        System.out.println("11. Save Food Data");
-        System.out.println("12. Save Log Data");
-        System.out.println("13. Save and Exit");
+        System.out.println("8. Set User Profile");
+        System.out.println("9. Update User Profile");
+        System.out.println("10. Compute Diet Goals");
+        System.out.println("11. Undo Last Action");
+        System.out.println("12. Change Day");
+        System.out.println("13. Save or Exit");
+        System.out.println("14. Load food from External Source");
     }
 
     private static void addBasicFood() {
         String id = InputHelper.readLine("Enter food id: ");
-        List<Food> results = foodDatabase.searchFoods(id);
-        if(!results.isEmpty()){
+        if(foodDatabase.findFoodById(id) != null){
             System.out.println("Food already exists.");
             return;
         }
-        int calories = InputHelper.readInt("Enter calories per serving: ");
+        int calories = InputHelper.readInt("Enter calories(kcal) per serving: ");
         String kwInput = InputHelper.readLine("Enter keywords (comma-separated): ");
         Food food = new Food(id, List.of(kwInput.split("\\s*,\\s*")), calories);
         foodDatabase.addBasicFood(food);
@@ -119,12 +144,11 @@ public class Main {
             String compId = InputHelper.readLine("Enter component food id (or 'done'): ");
             if (compId.equalsIgnoreCase("done")) break;
             // Find the food from the database
-            List<Food> results = foodDatabase.searchFoods(compId);
-            if (results.isEmpty()) {
+            Food compFood = foodDatabase.findFoodById(compId);
+            if (compFood == null) {
                 System.out.println("Food not found.");
                 continue;
             }
-            Food compFood = results.get(0); // assume the first match
             int servings = InputHelper.readInt("Enter number of servings for " + compFood.getId() + ": ");
             compositeFood.addComponent(compFood, servings);
         }
@@ -134,42 +158,46 @@ public class Main {
 
     private static void removeFood() {
         String id = InputHelper.readLine("Enter food id: ");
-        List<Food> results = foodDatabase.searchFoods(id);
-        if(results.isEmpty()){
-            System.out.println("Food doesn't exist.");
+        Food food = foodDatabase.findFoodById(id);
+        if (food == null) {
+            System.out.println("Food not found.");
             return;
         }
-        foodDatabase.removeFood(results.get(0));
+        foodDatabase.removeFood(food);
         System.out.println("Food '" + id + "' removed.");
     }
 
     private static void addLogEntry() {
-        String date = InputHelper.readLine("Enter date (YYYY-MM-DD): ");
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
+        String date = dateInput.isBlank() ? currentDate : dateInput;
+
         String foodId = InputHelper.readLine("Enter food id to log: ");
-        List<Food> results = foodDatabase.searchFoods(foodId);
-        if (results.isEmpty()) {
+        Food food = foodDatabase.findFoodById(foodId);
+        if (food == null) {
             System.out.println("Food not found.");
             return;
         }
-        Food food = results.get(0);
+
         int servings = InputHelper.readInt("Enter number of servings: ");
         LogEntry entry = new LogEntry(food, servings);
         logManager.addLogEntry(date, entry);
         System.out.println("Log entry added: " + entry);
 
-        // Example undo command for adding log entry.
-        // In a complete implementation, you’d store more details.
+        // Add an undo command
+        int indexAdded = logManager.getLogEntries(date).size() - 1;
         undoManager.addCommand(() -> {
-            logManager.deleteLogEntry(date, logManager.getLogEntries(date).size() - 1);
+            logManager.deleteLogEntry(date, indexAdded);
             System.out.println("Undid log entry addition for " + date);
         });
     }
 
     private static void deleteLogEntry() {
-        String date = InputHelper.readLine("Enter date (YYYY-MM-DD): ");
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
+        String date = dateInput.isBlank() ? currentDate : dateInput;
+
         List<LogEntry> entries = logManager.getLogEntries(date);
         if (entries.isEmpty()) {
-            System.out.println("No entries for that date.");
+            System.out.println("No log entry found.");
             return;
         }
         for (int i = 0; i < entries.size(); i++) {
@@ -192,39 +220,93 @@ public class Main {
     }
 
     private static void viewDailyLog() {
-        String date = InputHelper.readLine("Enter date (YYYY-MM-DD): ");
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
+        String date = dateInput.isBlank() ? currentDate : dateInput;
+
         List<LogEntry> entries = logManager.getLogEntries(date);
         if (entries.isEmpty()) {
-            System.out.println("No log entries for this date.");
+            System.out.println("No log entry found.");
         } else {
-            System.out.println("Log for " + date + ":");
+            System.out.println("\n========================================");
+            System.out.println("📅 Log for " + date);
+            System.out.println("----------------------------------------");
+            System.out.printf("%-20s %-10s %-10s%n", "Food", "Servings", "Calories");
+
             int totalCalories = 0;
             for (LogEntry entry : entries) {
-                System.out.println(" - " + entry);
-                totalCalories += entry.getTotalCalories();
+                String foodName = entry.getFood().getId();
+                int servings = entry.getServings();
+                int calories = entry.getTotalCalories();
+                totalCalories += calories;
+                System.out.printf("%-20s %-10d %-10d%n", foodName, servings, calories);
             }
-            System.out.println("Total calories consumed: " + totalCalories);
+
+            System.out.println("----------------------------------------");
+            System.out.printf("%-20s %-10s %-10d%n", "Total", "", totalCalories);
+            System.out.println("========================================\n");
         }
     }
 
     private static void setUserProfile() {
         String gender = InputHelper.readLine("Enter gender (male/female): ");
         if(!gender.equalsIgnoreCase("male") && !gender.equalsIgnoreCase("female")){
-            System.out.println("Error: YADA only supports binaries. :P");
+            System.out.println("Error: YADA only supports binaries.");
+            return;
         }
         double height = InputHelper.readDouble("Enter height (in centimeters): ");
         int age = InputHelper.readInt("Enter age: ");
         double weight = InputHelper.readDouble("Enter weight (in kg): ");
         double activityLevel = InputHelper.readDouble("Enter activity level multiplier (e.g., 1.2, 1.55): ");
-        userProfile = new UserProfile(gender, height, age, weight, activityLevel);
+        userProfile = new UserProfile(gender.toLowerCase(Locale.ROOT), height, age, weight, activityLevel);
         System.out.println("User profile set: " + userProfile);
 
-        // Optionally, let user choose the diet goal calculation method.
-        String methodChoice = InputHelper.readLine("Choose diet goal calculation method (1 or 2): ");
+        // Let user choose the diet goal calculation method.
+        String methodChoice = InputHelper.readLine("Choose diet goal calculation method (1.Harris-Benedict or 2.Mifflin-St Jeor): ");
         if (methodChoice.equals("2")) {
             dietGoalCalculator = new MethodTwoCalculator();
-        } else {
+        } else if (methodChoice.equals("1")){
             dietGoalCalculator = new MethodOneCalculator();
+        } else{
+            System.out.println("Invalid Choice.");
+        }
+    }
+
+    private static void updateUserProfile(){
+        System.out.println("\nProfile Update Menu:");
+        System.out.println("1. Change age");
+        System.out.println("2. Change weight");
+        System.out.println("3. Change activity level");
+        System.out.println("4. Change diet goal calculation method");
+        System.out.println("Anything else: Return");
+        String choice = InputHelper.readLine("Enter choice: ");
+        switch (choice) {
+            case "1":
+                int age = InputHelper.readInt("Enter age: ");
+                userProfile.setAge(age);
+                System.out.println("Age set.");
+                break;
+            case "2":
+                double weight = InputHelper.readDouble("Enter weight (in kg): ");
+                userProfile.setWeight(weight);
+                System.out.println("Weight set");
+                break;
+            case "3":
+                double activityLevel = InputHelper.readDouble("Enter activity level multiplier (e.g., 1.2, 1.55): ");
+                userProfile.setActivityLevel(activityLevel);
+                System.out.println("Activity level set");
+                break;
+            case "4":
+                String methodChoice = InputHelper.readLine("Choose 1.Harris-Benedict or 2.Mifflin-St Jeor: ");
+                if (methodChoice.equals("1")) {
+                    dietGoalCalculator = new MethodOneCalculator();
+                } else if (methodChoice.equals("2")){
+                    dietGoalCalculator = new MethodTwoCalculator();
+                } else{
+                    System.out.println("Invalid Choice.");
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -233,14 +315,79 @@ public class Main {
             System.out.println("User profile not set. Please set the user profile first.");
             return;
         }
-        String date = InputHelper.readLine("Enter date (YYYY-MM-DD) to view log: ");
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
+        String date = dateInput.isBlank() ? currentDate : dateInput;
+
         List<LogEntry> entries = logManager.getLogEntries(date);
         int totalCalories = entries.stream().mapToInt(LogEntry::getTotalCalories).sum();
         double targetCalories = dietGoalCalculator.calculateTargetCalories(userProfile);
         double difference = totalCalories - targetCalories;
-        System.out.println("For date " + date + ":");
-        System.out.println("Total calories consumed: " + totalCalories);
-        System.out.println("Target calorie intake: " + targetCalories);
-        System.out.println("Difference (excess if positive, available if negative): " + difference);
+
+        System.out.println("\n────────────── Diet Summary ──────────────");
+        System.out.println("Date: " + date);
+        System.out.printf("Total calories consumed : %d kcal%n", totalCalories);
+        System.out.printf("Target calorie intake    : %.2f kcal%n", targetCalories);
+        System.out.printf("Difference (excess/deficit): %.2f kcal%n", difference);
+        System.out.println("──────────────────────────────────────────");
+    }
+
+    private static void changeDay(){
+        System.out.println("\nDate Menu:");
+        System.out.println("1. Next Day");
+        System.out.println("2. Custom Day");
+        System.out.println("3. Previous Day (for testing)");
+        System.out.println("Anything else: Return");
+
+        String choice = InputHelper.readLine("Enter choice: ");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date;
+        switch (choice) {
+            case "1":
+                date = LocalDate.parse(currentDate, formatter);
+                currentDate = date.plusDays(1).format(formatter);
+                System.out.println("Moved to next day: " + currentDate);
+                break;
+            case "2":
+                String newDate = InputHelper.readLine("Enter new date (YYYY-MM-DD): ");
+                try {
+                    LocalDate.parse(newDate, formatter); // validate format
+                    currentDate = newDate;
+                    System.out.println("Date changed to: " + currentDate);
+                } catch (DateTimeParseException e) {
+                    System.out.println("Invalid date format.");
+                }
+                break;
+            case "3":
+                date = LocalDate.parse(currentDate, formatter);
+                currentDate = date.minusDays(1).format(formatter);
+                System.out.println("Moved to previous day: " + currentDate);
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    private static void loadFoodFromExternalSource() {
+        String filePath = InputHelper.readLine("Enter file path: ");
+        String fileType = InputHelper.readLine("Enter file type (csv, json, xml...): ");
+
+        if (fileType.equals("csv")) {
+            try {
+                FoodCSVImporter.importFromCSV(filePath, foodDatabase);
+                System.out.println("CSV food data imported successfully.");
+            } catch (Exception e) {
+                System.out.println("Error importing CSV: " + e.getMessage());
+            }
+        } else if (fileType.equals("json")) {
+            try {
+                FoodJSONImporter.importFromJSON(filePath, foodDatabase);
+                System.out.println("JSON food data imported successfully.");
+            } catch (Exception e) {
+                System.out.println("Error importing JSON: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Support for '" + fileType + "' can be added later.");
+        }
     }
 }

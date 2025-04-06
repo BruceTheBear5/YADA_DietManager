@@ -80,9 +80,21 @@ public class FoodDatabase {
     // Helper function to find a basic food by ID
     private Food findBasicFoodById(String id) {
         for (Food food : basicFoods) {
-            if (food.getId().equals(id)) {
+            if (food.getId().equalsIgnoreCase(id))
                 return food;
-            }
+        }
+        return null;
+    }
+
+    // Helper function to find food by ID
+    public Food findFoodById(String id) {
+        for (Food food : basicFoods) {
+            if (food.getId().equalsIgnoreCase(id))
+                return food;
+        }
+        for (CompositeFood cf : compositeFoods) {
+            if (cf.getId().equalsIgnoreCase(id))
+                return cf;
         }
         return null;
     }
@@ -129,14 +141,14 @@ public class FoodDatabase {
     public List<Food> searchFoods(String keyword) {
         List<Food> results = new ArrayList<>();
         for (Food food : basicFoods) {
-            if (food.getId().equalsIgnoreCase(keyword)){
-//                    || food.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
+            if (food.getId().equalsIgnoreCase(keyword)
+                    || food.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
                 results.add(food);
             }
         }
         for (CompositeFood cf : compositeFoods) {
-            if (cf.getId().equalsIgnoreCase(keyword)){
-//                    || cf.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
+            if (cf.getId().equalsIgnoreCase(keyword)
+                    || cf.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
                 results.add(cf);
             }
         }
