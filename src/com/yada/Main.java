@@ -2,7 +2,7 @@ package com.yada;
 
 import com.yada.models.*;
 import com.yada.services.*;
-import com.yada.utils.InputHelper;
+import com.yada.utils.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +15,7 @@ public class Main {
     private static LogManager logManager = new LogManager();
     private static UndoManager undoManager = new UndoManager();
     private static UserProfile userProfile;
+    private static FoodImporter importer;
     // Default to Method One. User can switch later.
     private static DietGoalCalculator dietGoalCalculator = new MethodOneCalculator();
     private static String currentDate = LocalDate.now().toString();
@@ -127,9 +128,21 @@ public class Main {
             System.out.println("Food already exists.");
             return;
         }
+        if(!Validator.isValidId(id)){
+            System.out.println("Invalid ID. Use only letters, numbers, underscores and spaces.");
+            return;
+        }
         int calories = InputHelper.readInt("Enter calories(kcal) per serving: ");
-        String kwInput = InputHelper.readLine("Enter keywords (comma-separated): ");
-        Food food = new Food(id, List.of(kwInput.split("\\s*,\\s*")), calories);
+        if(!Validator.isValidCalorieValue(calories)){
+            System.out.println("Invalid Calories. Must be positive.");
+            return;
+        }
+        List<String> keywords = List.of(InputHelper.readLine("Enter keywords (comma-separated): ").split("\\s*,\\s*"));
+        if (!Validator.isValidKeywordList(keywords)) {
+            System.out.println("Invalid keywords. Use only letters, numbers, underscores and spaces. No more than 10.");
+            return;
+        }
+        Food food = new Food(id, keywords, calories);
         foodDatabase.addBasicFood(food);
         System.out.println("Basic food added: " + food);
         // (For undo, one could add a command that removes this food if needed)
@@ -137,9 +150,21 @@ public class Main {
 
     private static void addCompositeFood() {
         String id = InputHelper.readLine("Enter composite food id: ");
-        String kwInput = InputHelper.readLine("Enter keywords (comma-separated): ");
-        CompositeFood compositeFood = new CompositeFood(id, List.of(kwInput.split("\\s*,\\s*")));
-        System.out.println("Adding components to composite food. Type 'done' when finished.");
+        if(foodDatabase.findFoodById(id) != null){
+            System.out.println("Food already exists.");
+            return;
+        }
+        if(!Validator.isValidId(id)){
+            System.out.println("Invalid ID. Use only letters, numbers, underscores and spaces.");
+            return;
+        }
+        List<String> keywords = List.of(InputHelper.readLine("Enter keywords (comma-separated): ").split("\\s*,\\s*"));
+        if (!Validator.isValidKeywordList(keywords)) {
+            System.out.println("Invalid keywords. Use only letters, numbers, underscores and spaces. No more than 10.");
+            return;
+        }
+        CompositeFood compositeFood = new CompositeFood(id, keywords);
+        System.out.println("Adding components to composite food. Press enter when finished.");
         while (true) {
             String compId = InputHelper.readLine("Enter component food id (or nothing to stop): ");
             if (compId.isBlank()) break;
@@ -150,6 +175,10 @@ public class Main {
                 continue;
             }
             int servings = InputHelper.readInt("Enter number of servings for " + compFood.getId() + ": ");
+            if (!Validator.isValidServings(servings)){
+                System.out.println("Invalid servings. Must be positive.");
+                continue;
+            }
             compositeFood.addComponent(compFood, servings);
         }
         foodDatabase.addCompositeFood(compositeFood);
@@ -168,8 +197,8 @@ public class Main {
     }
 
     private static void addLogEntry() {
-        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
-        String date = dateInput.isBlank() ? currentDate : dateInput;
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default/invalid: today]: ");
+        String date = (dateInput.isBlank() || !Validator.isValidDate(dateInput)) ? currentDate : dateInput;
 
         System.out.println("\nChoose how to add food:");
         System.out.println("1. By food ID");
@@ -219,6 +248,10 @@ public class Main {
         }
 
         int servings = InputHelper.readInt("Enter number of servings: ");
+        if(!Validator.isValidServings(servings)){
+            System.out.println("Invalid number of servings. Defaulting to 1.");
+            servings = 1;
+        }
         LogEntry entry = new LogEntry(food, servings);
         logManager.addLogEntry(date, entry);
         System.out.println("Log entry added: " + entry);
@@ -231,8 +264,8 @@ public class Main {
     }
 
     private static void deleteLogEntry() {
-        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
-        String date = dateInput.isBlank() ? currentDate : dateInput;
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default/invalid: today]: ");
+        String date = (dateInput.isBlank() || !Validator.isValidDate(dateInput)) ? currentDate : dateInput;
 
         List<LogEntry> entries = logManager.getLogEntries(date);
         if (entries.isEmpty()) {
@@ -259,8 +292,8 @@ public class Main {
     }
 
     private static void viewDailyLog() {
-        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
-        String date = dateInput.isBlank() ? currentDate : dateInput;
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default/invalid: today]: ");
+        String date = (dateInput.isBlank() || !Validator.isValidDate(dateInput)) ? currentDate : dateInput;
 
         List<LogEntry> entries = logManager.getLogEntries(date);
         if (entries.isEmpty()) {
@@ -289,13 +322,18 @@ public class Main {
     private static void setUserProfile() {
         String gender = InputHelper.readLine("Enter gender (male/female): ");
         if(!gender.equalsIgnoreCase("male") && !gender.equalsIgnoreCase("female")){
-            System.out.println("Error: YADA only supports binaries.");
+            System.out.println("YADA only supports binaries.");
             return;
         }
         double height = InputHelper.readDouble("Enter height (in centimeters): ");
         int age = InputHelper.readInt("Enter age: ");
         double weight = InputHelper.readDouble("Enter weight (in kg): ");
         double activityLevel = InputHelper.readDouble("Enter activity level multiplier (e.g., 1.2, 1.55): ");
+        while(!Validator.isValidActivityLevel(activityLevel)){
+            System.out.println("Activity level must lie between 1.2 and 2.5. Try again.");
+            activityLevel = InputHelper.readDouble("Enter activity level multiplier (e.g., 1.2, 1.55): ");
+        }
+
         userProfile = new UserProfile(gender.toLowerCase(Locale.ROOT), height, age, weight, activityLevel);
         System.out.println("User profile set: " + userProfile);
 
@@ -331,6 +369,10 @@ public class Main {
                 break;
             case "3":
                 double activityLevel = InputHelper.readDouble("Enter activity level multiplier (e.g., 1.2, 1.55): ");
+                if(!Validator.isValidActivityLevel(activityLevel)) {
+                    System.out.println("Activity level must lie between 1.2 and 2.5. Buzz off");
+                    return;
+                }
                 userProfile.setActivityLevel(activityLevel);
                 System.out.println("Activity level set");
                 break;
@@ -354,8 +396,8 @@ public class Main {
             System.out.println("User profile not set. Please set the user profile first.");
             return;
         }
-        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
-        String date = dateInput.isBlank() ? currentDate : dateInput;
+        String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default/invalid: today]: ");
+        String date = (dateInput.isBlank() || !Validator.isValidDate(dateInput)) ? currentDate : dateInput;
 
         List<LogEntry> entries = logManager.getLogEntries(date);
         int totalCalories = entries.stream().mapToInt(LogEntry::getTotalCalories).sum();
@@ -365,8 +407,8 @@ public class Main {
         System.out.println("\n────────────── Diet Summary ──────────────");
         System.out.println("Date: " + date);
         System.out.printf("Total calories consumed : %d kcal%n", totalCalories);
-        System.out.printf("Target calorie intake    : %.2f kcal%n", targetCalories);
-        System.out.printf("Difference (excess/deficit): %.2f kcal%n", difference);
+        System.out.printf("Target calorie intake    : %.3f kcal%n", targetCalories);
+        System.out.printf("Difference (excess/deficit): %.3f kcal%n", difference);
         System.out.println("──────────────────────────────────────────");
     }
 
@@ -411,22 +453,21 @@ public class Main {
         String filePath = InputHelper.readLine("Enter file path: ");
         String fileType = InputHelper.readLine("Enter file type (csv, json, xml...): ");
 
-        if (fileType.equals("csv")) {
-            try {
-                FoodCSVImporter.importFromCSV(filePath, foodDatabase);
-                System.out.println("CSV food data imported successfully.");
-            } catch (Exception e) {
-                System.out.println("Error importing CSV: " + e.getMessage());
-            }
-        } else if (fileType.equals("json")) {
-            try {
-                FoodJSONImporter.importFromJSON(filePath, foodDatabase);
-                System.out.println("JSON food data imported successfully.");
-            } catch (Exception e) {
-                System.out.println("Error importing JSON: " + e.getMessage());
-            }
+        if (fileType.equalsIgnoreCase("csv")) {
+            importer = new FoodCSVImporter();
+        } else if (fileType.equalsIgnoreCase("json")) {
+            importer = new FoodJSONImporter();
         } else {
             System.out.println("Support for '" + fileType + "' can be added later.");
+            return;
+        }
+
+        try {
+            importer.importFoods(filePath, foodDatabase);
+            System.out.println(fileType.toUpperCase() + " food data imported successfully.");
+        } catch (Exception e) {
+            System.out.println("Error importing " + fileType + ": " + e.getMessage());
         }
     }
+
 }

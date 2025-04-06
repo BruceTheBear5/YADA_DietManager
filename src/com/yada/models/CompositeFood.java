@@ -9,14 +9,14 @@ public class CompositeFood extends Food {
     private Map<Food, Integer> components;
 
     public CompositeFood(String id, List<String> keywords) {
-        // Initial calories is computed from components; set to 0 here.
+        // Calories are computed from components; Initially set to 0 here.
         super(id, keywords, 0);
         this.components = new HashMap<>();
     }
 
     public void addComponent(Food food, int servings) {
         components.put(food, servings);
-        //updateCalories();
+        updateCalories();
     }
 
     private void updateCalories() {

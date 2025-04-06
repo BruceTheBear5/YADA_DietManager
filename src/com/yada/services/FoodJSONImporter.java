@@ -10,12 +10,12 @@ import java.io.IOException;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
-public class FoodJSONImporter {
-    private static final Set<String> ID_HEADERS = Set.of("id", "name", "foodname", "food_name", "title");
-    private static final Set<String> CAL_HEADERS = Set.of("cal", "calories", "energy", "kcal", "calorie");
-    private static final Set<String> KEYWORDS_HEADERS = Set.of("keywords", "tags", "descriptors");
+public class FoodJSONImporter implements FoodImporter{
+//    private static final Set<String> ID_HEADERS = Set.of("id", "name", "foodname", "food_name", "title");
+//    private static final Set<String> CAL_HEADERS = Set.of("cal", "calories", "energy", "kcal", "calorie");
+//    private static final Set<String> KEYWORDS_HEADERS = Set.of("keywords", "tags", "descriptors");
 
-    public static void importFromJSON(String filePath, FoodDatabase db) {
+    public void importFoods(String filePath, FoodDatabase db) {
         JSONParser parser = new JSONParser();
         try (FileReader reader = new FileReader(filePath)) {
             Object obj = parser.parse(reader);

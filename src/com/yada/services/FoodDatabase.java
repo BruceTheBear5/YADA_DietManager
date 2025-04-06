@@ -22,7 +22,7 @@ public class FoodDatabase {
 
     // Loads foods from a text file.
     // Format for basic foods: B;id;calories;keyword1,keyword2,...
-    // Format for composite foods: C;id;keyword1,keyword2,...
+    // Format for composite foods: C;id;keyword1,keyword2,...;component1:amount,component2:amount
     public void loadFoods() {
         File file = new File(foodFile);
         if (!file.exists()) {
@@ -57,8 +57,8 @@ public class FoodDatabase {
                                 String componentId = componentParts[0];
                                 int servings = Integer.parseInt(componentParts[1]);
 
-                                // Find the referenced basic food
-                                Food foundFood = findBasicFoodById(componentId);
+                                // Find the referenced component food
+                                Food foundFood = findFoodById(componentId);
                                 if (foundFood != null) {
                                     compositeFood.addComponent(foundFood, servings);
                                 } else {
@@ -75,15 +75,6 @@ public class FoodDatabase {
         } catch (Exception e) {
             System.out.println("Error loading foods: " + e.getMessage());
         }
-    }
-
-    // Helper function to find a basic food by ID
-    private Food findBasicFoodById(String id) {
-        for (Food food : basicFoods) {
-            if (food.getId().equalsIgnoreCase(id))
-                return food;
-        }
-        return null;
     }
 
     // Helper function to find food by ID
@@ -131,11 +122,9 @@ public class FoodDatabase {
             compositeFoods.remove(food);
         } else {
             basicFoods.remove(food);
-            // Also remove this food from any CompositeFood that uses it as a component
-            for (CompositeFood cf : compositeFoods) {
-                cf.getComponents().remove(food);
-            }
         }
+        // Also remove any CompositeFood that uses this food as a component
+        compositeFoods.removeIf(cf -> cf.getComponents().containsKey(food));
     }
 
     public List<Food> searchFoods(List<String> keywords, boolean all) {

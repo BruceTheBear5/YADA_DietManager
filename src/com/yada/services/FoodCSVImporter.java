@@ -6,13 +6,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-public class FoodCSVImporter {
+public class FoodCSVImporter implements FoodImporter{
 
-    private static final Set<String> ID_HEADERS = Set.of("id", "name", "foodname", "food_name", "title");
-    private static final Set<String> CAL_HEADERS = Set.of("cal", "calories", "energy", "kcal", "calorie");
-    private static final Set<String> KEYWORDS_HEADERS = Set.of("keywords", "tags", "descriptors");
+//    private static final Set<String> ID_HEADERS = Set.of("id", "name", "foodname", "food_name", "title");
+//    private static final Set<String> CAL_HEADERS = Set.of("cal", "calories", "energy", "kcal", "calorie");
+//    private static final Set<String> KEYWORDS_HEADERS = Set.of("keywords", "tags", "descriptors");
 
-    public static void importFromCSV(String filePath, FoodDatabase db) {
+    public void importFoods(String filePath, FoodDatabase db) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String headerLine = reader.readLine();
             if (headerLine == null) {

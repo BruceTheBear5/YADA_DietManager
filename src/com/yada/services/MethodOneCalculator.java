@@ -11,10 +11,10 @@ public class MethodOneCalculator implements DietGoalCalculator {
         double bmr = 0;
         if (profile.getGender().equalsIgnoreCase("male")) {
             // Harris-Benedict for men
-            bmr = 66.5 + (13.75 * profile.getWeight()) + (5.003 * profile.getHeight()) - (6.75 * profile.getAge());
+            bmr = 66.473 + (13.7516 * profile.getWeight()) + (5.0033 * profile.getHeight()) - (6.755 * profile.getAge());
         } else {
             // Harris-Benedict for women
-            bmr = 655.1 + (9.563 * profile.getWeight()) + (1.850 * profile.getHeight()) - (4.676 * profile.getAge());
+            bmr = 655.0955 + (9.5634 * profile.getWeight()) + (1.8496 * profile.getHeight()) - (4.6756 * profile.getAge());
         }
         return bmr * profile.getActivityLevel();
     }
