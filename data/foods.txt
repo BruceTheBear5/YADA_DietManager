@@ -1,0 +1,3 @@
+B;sausage;50;meat,protein,processed
+B;mustard;12;sauce,condiment
+C;hot dog;sandwich,carb,protein;sausage:1
