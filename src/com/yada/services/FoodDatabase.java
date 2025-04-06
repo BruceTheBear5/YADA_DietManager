@@ -138,21 +138,34 @@ public class FoodDatabase {
         }
     }
 
-    public List<Food> searchFoods(String keyword) {
+    public List<Food> searchFoods(List<String> keywords, boolean all) {
         List<Food> results = new ArrayList<>();
+
         for (Food food : basicFoods) {
-            if (food.getId().equalsIgnoreCase(keyword)
-                    || food.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
+            if (matchesKeywords(food.getKeywords(), keywords, all))
                 results.add(food);
-            }
         }
         for (CompositeFood cf : compositeFoods) {
-            if (cf.getId().equalsIgnoreCase(keyword)
-                    || cf.getKeywords().stream().anyMatch(kw -> kw.equalsIgnoreCase(keyword))) {
+            if (matchesKeywords(cf.getKeywords(), keywords, all))
                 results.add(cf);
-            }
         }
+
         return results;
+    }
+
+    // Helper function to check if food keywords match search keywords
+    private boolean matchesKeywords(List<String> foodKeywords, List<String> searchKeywords, boolean all) {
+        if (all) {
+            // All keywords must match
+            return searchKeywords.stream()
+                    .allMatch(sk -> foodKeywords.stream()
+                            .anyMatch(fk -> fk.equalsIgnoreCase(sk)));
+        } else {
+            // At least one keyword must match
+            return searchKeywords.stream()
+                    .anyMatch(sk -> foodKeywords.stream()
+                            .anyMatch(fk -> fk.equalsIgnoreCase(sk)));
+        }
     }
 
     public List<Food> getAllFoods() {

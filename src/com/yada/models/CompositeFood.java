@@ -39,9 +39,13 @@ public class CompositeFood extends Food {
         }
         return total;
     }
-
     @Override
     public String toString() {
-        return "CompositeFood{id='" + getId() + "', calories=" + getCaloriesPerServing() + ", components=" + components.keySet() + "}";
+        List<String> componentIds = components.keySet().stream()
+                .map(Food::getId)
+                .toList();
+        return "CompositeFood{id='" + getId() + "', calories=" + getCaloriesPerServing()
+                + ", keywords=" + getKeywords()
+                + ", components=" + componentIds + "}";
     }
 }

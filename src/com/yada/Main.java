@@ -141,8 +141,8 @@ public class Main {
         CompositeFood compositeFood = new CompositeFood(id, List.of(kwInput.split("\\s*,\\s*")));
         System.out.println("Adding components to composite food. Type 'done' when finished.");
         while (true) {
-            String compId = InputHelper.readLine("Enter component food id (or 'done'): ");
-            if (compId.equalsIgnoreCase("done")) break;
+            String compId = InputHelper.readLine("Enter component food id (or nothing to stop): ");
+            if (compId.isBlank()) break;
             // Find the food from the database
             Food compFood = foodDatabase.findFoodById(compId);
             if (compFood == null) {
@@ -171,10 +171,50 @@ public class Main {
         String dateInput = InputHelper.readLine("Enter date (YYYY-MM-DD) [default: today]: ");
         String date = dateInput.isBlank() ? currentDate : dateInput;
 
-        String foodId = InputHelper.readLine("Enter food id to log: ");
-        Food food = foodDatabase.findFoodById(foodId);
-        if (food == null) {
-            System.out.println("Food not found.");
+        System.out.println("\nChoose how to add food:");
+        System.out.println("1. By food ID");
+        System.out.println("2. Search by keywords");
+        String choice = InputHelper.readLine("Enter choice: ");
+
+        Food food;
+
+        if (choice.equals("1")) {
+            String foodId = InputHelper.readLine("\nEnter food id to log: ");
+            food = foodDatabase.findFoodById(foodId);
+            if (food == null) {
+                System.out.println("Food not found.");
+                return;
+            }
+        } else if (choice.equals("2")) {
+            String kwInput = InputHelper.readLine("\nEnter keywords (comma-separated): ");
+            List<String> keywords = List.of(kwInput.split("\\s*,\\s*"));
+
+            String matchMode = InputHelper.readLine("Match all keywords? (y/n): ");
+            boolean matchAll = matchMode.equalsIgnoreCase("y");
+
+            List<Food> results = foodDatabase.searchFoods(keywords, matchAll);
+
+            if (results.isEmpty()) {
+                System.out.println("No matching foods found.");
+                return;
+            }
+
+            System.out.println("Matching foods:");
+            for (int i = 0; i < results.size(); i++) {
+                System.out.println((i + 1) + ". " + results.get(i));
+            }
+
+            int selectedIndex = InputHelper.readInt("Enter the number of the food to log (0 for N.A.):");
+            if (selectedIndex < 0 || selectedIndex > results.size()) {
+                System.out.println("Invalid selection.");
+                return;
+            }
+
+            if(selectedIndex == 0)
+                return;
+            food = results.get(selectedIndex - 1);
+        } else {
+            System.out.println("Invalid choice.");
             return;
         }
 
@@ -183,7 +223,6 @@ public class Main {
         logManager.addLogEntry(date, entry);
         System.out.println("Log entry added: " + entry);
 
-        // Add an undo command
         int indexAdded = logManager.getLogEntries(date).size() - 1;
         undoManager.addCommand(() -> {
             logManager.deleteLogEntry(date, indexAdded);

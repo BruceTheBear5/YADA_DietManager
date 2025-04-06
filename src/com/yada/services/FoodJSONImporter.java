@@ -53,8 +53,8 @@ public class FoodJSONImporter {
                     continue;
                 }
 
-                List<Food> results = db.searchFoods(id);
-                if(!results.isEmpty()){
+                Food results = db.findFoodById(id);
+                if(results != null){
                     System.out.println("Skipping entry with duplicate ID: " + id);
                     continue;
                 }
