@@ -14,7 +14,6 @@ public class Main {
     private static LogManager logManager = new LogManager();
     private static UndoManager undoManager = new UndoManager();
     private static UserProfile userProfile;
-    private static FoodImporter importer;
     // Default to Method One. User can switch later.
     private static DietGoalCalculator dietGoalCalculator = new MethodOneCalculator();
     private static String currentDate = LocalDate.now().toString();
@@ -464,6 +463,7 @@ public class Main {
         String filePath = InputHelper.readLine("Enter file path: ");
         String fileType = InputHelper.readLine("Enter file type (csv, json, xml...): ");
 
+        FoodImporter importer;
         if (fileType.equalsIgnoreCase("csv")) {
             importer = new FoodCSVImporter();
         } else if (fileType.equalsIgnoreCase("json")) {
