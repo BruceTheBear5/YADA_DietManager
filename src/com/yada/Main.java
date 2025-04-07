@@ -3,7 +3,6 @@ package com.yada;
 import com.yada.models.*;
 import com.yada.services.*;
 import com.yada.utils.*;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -180,6 +179,10 @@ public class Main {
             }
             compositeFood.addComponent(compFood, servings);
         }
+        if (compositeFood.getComponents().isEmpty()) {
+            System.out.println("Composite food must have at least one component.");
+            return;
+        }
         foodDatabase.addCompositeFood(compositeFood);
         System.out.println("Composite food added: " + compositeFood);
     }
@@ -319,6 +322,10 @@ public class Main {
     }
 
     private static void setUserProfile() {
+        if (userProfile != null) {
+            System.out.println("User profile already set.");
+            return;
+        }
         String gender = InputHelper.readLine("Enter gender (male/female): ");
         if(!gender.equalsIgnoreCase("male") && !gender.equalsIgnoreCase("female")){
             System.out.println("YADA only supports binaries.");
@@ -348,6 +355,10 @@ public class Main {
     }
 
     private static void updateUserProfile(){
+        if (userProfile == null) {
+            System.out.println("User profile not set. Please set the user profile first.");
+            return;
+        }
         System.out.println("\nProfile Update Menu:");
         System.out.println("1. Change age");
         System.out.println("2. Change weight");
