@@ -1,6 +1,5 @@
 B;sausage;50;meat,protein,processed
 B;mustard;12;sauce,condiment
-B;pate;68;meat,protein,sauce
 B;bread slice;20;bread,wheat,carb
+B;banana;4;fruit,healthy
 C;hot dog;sandwich,carb,protein;sausage:1
-C;pate toast;protein,toast,bread,yummu;pate:2,bread slice:1
