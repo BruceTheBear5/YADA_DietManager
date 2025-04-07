@@ -1,23 +1,23 @@
-B;apple;52;fruit,fresh,sweet,crunchy
+B;apple;82;fruit,fresh,sweet,crunchy
 B;banana;89;fruit,soft,sweet
-B;rice;130;grain,boiled,staple
-B;bread;95;grain,baked,wheat
-B;chicken breast;165;meat,protein,grilled
-B;rajma;72;protein,vegan,legume,bean
-B;lettuce;28;vegetable,green,leafy
-B;carrot;41;vegetable,crunchy,orange
-B;milk;42;dairy,liquid,white
+B;rice;230;grain,boiled,staple
+B;bread;195;grain,baked,wheat
+B;chicken breast;265;meat,protein,grilled
+B;rajma;172;protein,vegan,legume,bean
+B;lettuce;88;vegetable,green,leafy
+B;carrot;81;vegetable,crunchy,orange
+B;milk;82;dairy,liquid,white
 B;cheese;201;dairy,solid,salty
 B;egg;155;protein,boiled,breakfast
-B;yogurt;59;dairy,cultured,cool
-C;grilled chicken salad;salad,healthy,protein;chicken breast:1,lettuce:1,carrot:1
+B;yogurt;109;dairy,cultured,cool
+C;grilled chicken salad;salad,healthy,protein;lettuce:1,carrot:1,chicken breast:1
 C;omelette;breakfast,egg;egg:2
 C;bread omelette;breakfast,egg,sandwich;omelette:1,bread:2
 C;cheese omelette;breakfast,egg,protein,dairy;omelette:1,cheese:1
-C;fruit salad;fruit,mix,sweet,salad;apple:1,banana:1,yogurt:1
-C;rajma rice;staple,protein,veg;rice:1,rajma:2
-C;veg sandwich;sandwich,veg,quick;bread:2,carrot:1,lettuce:1
-C;smoothie;drink,fruit,dairy;banana:1,milk:1,yogurt:1
-C;burger;fast food,meat,bun,sandwich;bread:2,chicken breast:1
+C;fruit salad;fruit,mix,sweet,salad;apple:1,yogurt:1,banana:1
+C;rajma rice;staple,protein,veg;rajma:2,rice:1
+C;veg sandwich;sandwich,veg,quick;lettuce:1,carrot:1,bread:2
+C;smoothie;drink,fruit,dairy;milk:1,yogurt:1,banana:1
+C;burger;fast food,meat,bun,sandwich;chicken breast:1,bread:2
 C;burger with cheese;fast food,meat,dairy,bun;burger:1,cheese:1
-C;banana pudding;desert,sweet,pudding;bread:4,banana:2,milk:2
+C;banana pudding;desert,sweet,pudding;milk:2,bread:4,banana:2

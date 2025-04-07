@@ -1,6 +1,37 @@
-2025-04-06;sausage;10
-2025-04-06;hot dog;3
-2025-04-06;hot dog;2
-2025-04-06;mustard;1
-2025-04-07;sausage;3
-2025-04-07;sausage;41
+2025-04-02;veg sandwich;3
+2025-04-02;grilled chicken salad;4
+2025-04-03;egg;7
+2025-04-03;rice;1
+2025-04-04;veg sandwich;6
+2025-04-05;cheese omelette;2
+2025-04-05;rajma rice;2
+2025-04-06;fruit salad;3
+2025-04-06;egg;3
+2025-04-06;carrot;5
+2025-04-07;omelette;3
+2025-04-07;bread;2
+2025-04-07;rajma rice;2
+2025-04-08;banana;4  
+2025-04-08;milk;2  
+2025-04-08;bread omelette;3  
+2025-04-09;grilled chicken salad;4  
+2025-04-09;apple;3  
+2025-04-09;yogurt;5  
+2025-04-10;veg sandwich;3  
+2025-04-10;smoothie;3  
+2025-04-10;banana pudding;3  
+2025-04-11;cheese omelette;2  
+2025-04-11;bread;4  
+2025-04-11;carrot;4  
+2025-04-12;rajma rice;2  
+2025-04-12;fruit salad;3
+2025-04-12;milk;3
+2025-04-13;burger with cheese;3
+2025-04-13;banana;7
+2025-04-13;yogurt;7
+2025-04-14;omelette;3
+2025-04-14;bread;3
+2025-04-14;lettuce;7
+2025-04-15;banana pudding;4
+2025-04-15;apple;3
+2025-04-15;smoothie;7
